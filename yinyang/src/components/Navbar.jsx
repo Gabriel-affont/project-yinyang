@@ -6,6 +6,9 @@ export default function Navbar() {
       <Link to="/">Home</Link>
       <Link to="/services">Explore Skills</Link>
       <Link to="/post-skill">Post a Skill</Link>
+      <Link to="/my-requests">My Requests</Link>
+      <Link to="/login">Login</Link>
+      <Link to="/signup">Sign Up</Link>
     </nav>
   );
 }

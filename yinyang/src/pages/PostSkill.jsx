@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useSkills } from "../context/SkillContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function PostSkill() {
   const { addSkill, skills } = useSkills();
+  const {user} = useAuth();
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -22,8 +24,12 @@ export default function PostSkill() {
       alert("Please fill out all fields");
       return;
     }
+    if (!user){
+      alert("You must be logged in to post a skill.");
+      return;
+    }
 
-    addSkill(formData);
+    addSkill({ ...formData, owner: user.email, requestedBy: null, status: "available" });
     alert("Skill posted successfully!");
     setFormData({
       title: "",
