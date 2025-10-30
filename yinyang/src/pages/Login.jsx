@@ -1,18 +1,28 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import api from "../api";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { login } = useAuth();
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    login(email); 
-    console.log("Email:", email);
-    navigate("/"); 
+    try {
+      const response = await api.post("/users/login", { email, password });
+      localStorage.setItem("token", response.data.token);
+      login(email); 
+      alert("Login successful");
+      navigate("/");
+    } catch (err) {
+      setError("Login failed. Please check your credentials.");
+      console.error("Login error:", err);
+    }
   };
 
   return (
@@ -47,6 +57,7 @@ export default function Login() {
         >
           Log In
         </button>
+        {error && <p className="text-red-500">{error}</p>}
       </form>
     </div>
   );
