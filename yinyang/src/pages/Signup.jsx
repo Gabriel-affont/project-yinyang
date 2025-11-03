@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import api from "../api";
 
 export default function Signup() {
     const [form, setForm] = useState({
@@ -8,8 +9,10 @@ export default function Signup() {
         email: "",
         password: "",
         confirmPassword: "",
+        location: "",
     });
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const { login } = useAuth();
     const navigate = useNavigate();
@@ -19,25 +22,61 @@ export default function Signup() {
         setForm({ ...form, [name]: value });
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (form.password !== form.confirmPassword) {
-            setError("Passwords do not match");
-            return;
-        }
-        setError("");
+    const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validation
+    if (form.password !== form.confirmPassword) {
+        setError("Passwords do not match");
+        return;
+    }
+    
+    if (form.password.length < 6) {
+        setError("Password must be at least 6 characters long");
+        return;
+    }
 
+    setError("");
+    setLoading(true);
 
-
-        const newUser = {
+    try {
+        // Step 1: Register the user - FIXED: Use PasswordHash instead of password
+        const registerResponse = await api.post("/Users", {
             name: form.name,
             email: form.email,
-        };
+            PasswordHash: form.password, // CHANGED: Match backend property name
+           Location: form.location
+        });
+        
+        console.log("User created:", registerResponse.data);
 
-        localStorage.setItem("user", JSON.stringify(newUser));
+        // Step 2: Automatically log the user in after successful registration
+        const loginResponse = await api.post("/users/login", {
+            email: form.email,
+            password: form.password
+        });
+
+        // Store token and user data
+        localStorage.setItem("token", loginResponse.data.token);
+        localStorage.setItem("user", JSON.stringify(loginResponse.data.user));
+        
         login(form.email);
+        alert("Signup successful!");
         navigate("/");
-    };
+        
+    } catch (error) {
+        console.error("Signup error:", error);
+        if (error.response?.status === 409) {
+            setError("User with this email already exists");
+        } else if (error.response?.data) {
+            setError(error.response.data);
+        } else {
+            setError("Signup failed. Please try again.");
+        }
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <div className="max-w-sm mx-auto mt-12 p-6 border rounded shadow bg-white">
@@ -67,6 +106,17 @@ export default function Signup() {
                         required
                     />
                 </label>
+                <label className="block">
+                    Loocation:
+                    <input
+                    type="text"
+                    name="location"
+                    value={form.location}
+                    onChange={handleChange}
+                    className="w-full border p-2 rounded mt-1"
+                    required
+                    placeholder="Enter your city or region"/>
+                </label>
 
                 <label className="block">
                     Password:
@@ -77,8 +127,10 @@ export default function Signup() {
                         onChange={handleChange}
                         className="w-full border p-2 rounded mt-1"
                         required
+                        minLength={6}
                     />
                 </label>
+                
                 <label className="block">
                     Confirm Password:
                     <input
@@ -91,14 +143,14 @@ export default function Signup() {
                     />
                 </label>
 
-               
                 {error && <p className="text-red-600 text-sm">{error}</p>}
 
                 <button
                     type="submit"
-                    className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
+                    disabled={loading}
+                    className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:bg-gray-400"
                 >
-                    Sign Up
+                    {loading ? "Creating Account..." : "Sign Up"}
                 </button>
             </form>
 

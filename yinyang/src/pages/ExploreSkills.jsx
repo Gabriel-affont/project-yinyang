@@ -11,23 +11,27 @@ export default function ExploreSkills() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchSkills = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await api.get("/skills", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setSkills(response.data);
-      } catch (error) {
-        console.error("Error fetching skills:", error);
-        setError("Failed to load skills. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSkills();
-  }, []);
+  
+useEffect(() => {
+  const fetchSkills = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      console.log(" Token:", token); 
+      
+      const response = await api.get("/Skills", { 
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log(" Skills data:", response.data);
+      setSkills(response.data);
+    } catch (error) {
+      console.error(" Error fetching skills:", error.response?.data);
+      setError("Failed to load skills. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchSkills();
+}, []);
 
   if (loading) {
     return <div className="text-center py-8">Loading skills...</div>;
