@@ -7,6 +7,8 @@ export default function Navbar() {
       <Link to="/services">Explore Skills</Link>
       <Link to="/post-skill">Post a Skill</Link>
       <Link to="/my-requests">My Requests</Link>
+      <Link to="/edit-skill/1">Edit Skill</Link>
+
       <Link to="/login">Login</Link>
       <Link to="/signup">Sign Up</Link>
     </nav>
