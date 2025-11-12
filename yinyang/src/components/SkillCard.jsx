@@ -1,8 +1,11 @@
 import api from "../api";
 import { useNavigate } from "react-router-dom";
+import ReviewForm from "./Review";
+import { useEffect, useState } from "react";
 
 export default function SkillCard({ skill }) {
   const navigate = useNavigate();
+
 
   const handleDelete = async () => {
     if (!window.confirm("Are you sure you want to delete this skill?")) return;
@@ -45,6 +48,18 @@ export default function SkillCard({ skill }) {
       alert("Failed to send request");
     }
   };
+  const [reviews, setReviews] = useState([]);
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const res = await api.get(`/reviews/skill/${skill.id}`);
+        setReviews(res.data);
+      } catch (err) {
+        console.error("Error fetching reviews:", err);
+      }
+    };
+    fetchReviews();
+  }, [skill.id]);
 
   return (
     <div className="border rounded p-4 shadow hover:shadow-lg transition">
@@ -79,7 +94,41 @@ export default function SkillCard({ skill }) {
         >
           Request Skill
         </button>
+        <button
+          onClick={async () => {
+            const newStatus = skill.status === "available" ? "unavailable" : "available";
+            await fetch(`https://localhost:7009/api/skills/${skill.id}/status`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(newStatus),
+            });
+            alert(`Status changed to ${newStatus}`);
+          }}
+          className={`px-3 py-1 rounded text-white ${skill.status === "available" ? "bg-green-500" : "bg-red-500"
+            }`}
+        >
+          {skill.status === "available" ? "Mark Unavailable" : "Mark Available"}
+        </button>
+
+        <ReviewForm skillId={skill.id} onReviewAdded={() => window.location.reload()} />
+      </div>
+
+      <div className="mt-4 w-full">
+        <h3 className="font-semibold mb-2">Reviews:</h3>
+        {reviews.length === 0 ? (
+          <p className="text-sm text-gray-500">No reviews yet.</p>
+        ) : (
+          reviews.map((r) => (
+            <div key={r.id} className="border-t pt-2">
+              <p className="text-yellow-500">{"⭐".repeat(r.rating)}</p>
+              <p className="text-gray-700">{r.comment}</p>
+              <p className="text-xs text-gray-400">By {r.user?.name || "Anonymous"}</p>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
 }
+
+

@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import SkillCard from "../components/SkillCard";
+import SkillCard from "../components/Skillcard";
 import api from "../api";
 
 export default function ExploreSkills() {
