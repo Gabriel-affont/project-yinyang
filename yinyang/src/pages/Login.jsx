@@ -12,20 +12,41 @@ export default function Login() {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await api.post("/users/login", { email, password });
-      localStorage.setItem("token", response.data.token);
-      login(email); 
-      alert("Login successful");
-      navigate("/");
-    } catch (err) {
-      setError("Login failed. Please check your credentials.");
-      console.error("Login error:", err);
+  e.preventDefault();
+  setError(""); 
+  
+  try {
+    const response = await api.post("/users/login", { email, password });
+
+    
+    localStorage.setItem("token", response.data.token);
+    localStorage.setItem("userId", response.data.user.id);
+    localStorage.setItem("userName", response.data.user.name);
+    localStorage.setItem("userEmail", response.data.user.email);
+
+    
+    login(response.data.user.email);
+
+    alert(`Welcome back, ${response.data.user.name}!`);
+    navigate("/");
+  } catch (err) {
+    
+    if (err.response && err.response.data && err.response.data.message) {
+      setError(err.response.data.message);
+    } else if (err.message) {
+      setError(err.message);
+    } else {
+      setError("Login failed. Please try again.");
     }
-  };
+  }
+}
+
+
+  
+
 
   return (
+    
     <div className="max-w-sm mx-auto mt-12 p-6 border rounded shadow bg-white">
       <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -62,3 +83,4 @@ export default function Login() {
     </div>
   );
 }
+

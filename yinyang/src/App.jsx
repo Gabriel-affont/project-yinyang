@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
 import EditSkill from "./pages/EditSkill.jsx";
+import Chat from "./pages/Chat.jsx";  
 
 export default function App() {
   return (
@@ -22,6 +23,8 @@ export default function App() {
           <Route path="post-skill" element={<PostSkill />} />
           <Route path="skill/:id" element={<SkillDetails />} />
           <Route path="my-requests" element={<MyRequests />} />
+          <Route path="/chat" element={<Chat />} />
+
           <Route path="login" element={<Login />} />
           <Route path="signup" element={<Signup />} />
           <Route path="edit-skill/:id" element={<EditSkill />} />

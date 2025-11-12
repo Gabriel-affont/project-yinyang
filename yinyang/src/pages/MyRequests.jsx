@@ -1,66 +1,94 @@
-import { useAuth } from "../context/AuthContext";
-import { useSkills } from "../context/SkillContext";
+import { useEffect, useState } from "react";
+import api from "../api";
 
 export default function MyRequests() {
-  const { user } = useAuth();
-  const { skills, updateSkillStatus } = useSkills();
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  if (!user) return <p>Please log in to view your requests.</p>;
+  const userId = localStorage.getItem("userId");
 
-  const incoming = skills.filter(
-    (s) => s.owner === user.email && s.requestedBy
-  );
-  const outgoing = skills.filter((s) => s.requestedBy === user.email);
+  useEffect(() => {
+    if (!userId) {
+      console.log("No userId found in localStorage");
+      setLoading(false);
+      return;
+    }
+    
+    const fetchRequests = async () => {
+      try {
+        console.log("Fetching requests for user ID:", userId);
+        const response = await api.get(`/requests/user/${userId}`);
+        console.log("API Response data:", response.data);
+        setRequests(response.data);
+      } catch (error) {
+        console.error("Error fetching requests:", error);
+        setError("Failed to load requests");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRequests();
+  }, [userId]);
+
+  
+  if (error) return <p className="text-red-500">Error: {error}</p>;
+  if (loading) return <p>Loading requests...</p>;
+  
+  console.log("Rendering with requests:", requests);
+  
+  if (!requests.length) return <p>No requests found.</p>;
+
+  const sentRequests = requests.filter((r) => r.requesterId == userId);
+  const receivedRequests = requests.filter((r) => r.skill.ownerId == userId);
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">My Requests</h1>
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-6">My Requests</h1>
 
-      {/* Incoming Requests */}
-      <h2 className="text-xl font-semibold mt-6 mb-2">Incoming Requests</h2>
-      {incoming.length === 0 ? (
-        <p>No one has requested your skills yet.</p>
-      ) : (
-        incoming.map((skill) => (
-          <div key={skill.id} className="border p-4 mb-3 rounded shadow">
-            <p className="font-semibold">{skill.title}</p>
-            <p className="text-sm text-gray-600">
-              Requested by: {skill.requestedBy}
-            </p>
-            {skill.status === "requested" && (
-              <div className="mt-2 flex gap-2">
-                <button
-                  onClick={() => updateSkillStatus(skill.id, "accepted")}
-                  className="bg-green-600 text-white px-3 py-1 rounded"
-                >
-                  Accept
-                </button>
-                <button
-                  onClick={() => updateSkillStatus(skill.id, "declined")}
-                  className="bg-red-600 text-white px-3 py-1 rounded"
-                >
-                  Decline
-                </button>
-              </div>
-            )}
-          </div>
-        ))
-      )}
+      
+      <section className="mb-8">
+        <h2 className="text-xl font-semibold mb-2">Requests You Sent</h2>
+        {sentRequests.length === 0 ? (
+          <p className="text-gray-500">You haven't sent any requests yet.</p>
+        ) : (
+          <ul className="space-y-3">
+            {sentRequests.map((req) => (
+              <li key={req.id} className="border p-4 rounded">
+                <p>
+                  You requested <strong>{req.skill.title}</strong> from{" "}
+                  <span className="text-blue-600 font-medium">
+                    {req.skill.owner.name}
+                  </span>
+                </p>
+                <p>Status: {req.status}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
-      {/* Outgoing Requests */}
-      <h2 className="text-xl font-semibold mt-8 mb-2">My Outgoing Requests</h2>
-      {outgoing.length === 0 ? (
-        <p>You haven’t requested any skills yet.</p>
-      ) : (
-        outgoing.map((skill) => (
-          <div key={skill.id} className="border p-4 mb-3 rounded shadow">
-            <p className="font-semibold">{skill.title}</p>
-            <p className="text-sm text-gray-600">
-              Status: {skill.status}
-            </p>
-          </div>
-        ))
-      )}
+      
+      <section>
+        <h2 className="text-xl font-semibold mb-2">Requests You Received</h2>
+        {receivedRequests.length === 0 ? (
+          <p className="text-gray-500">No one has requested your skills yet.</p>
+        ) : (
+          <ul className="space-y-3">
+            {receivedRequests.map((req) => (
+              <li key={req.id} className="border p-4 rounded">
+                <p>
+                  <span className="text-blue-600 font-medium">
+                    {req.requester.name}
+                  </span>{" "}
+                  requested your skill <strong>{req.skill.title}</strong>
+                </p>
+                <p>Status: {req.status}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

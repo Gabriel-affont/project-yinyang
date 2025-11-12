@@ -8,11 +8,41 @@ export default function SkillCard({ skill }) {
     if (!window.confirm("Are you sure you want to delete this skill?")) return;
     try {
       await api.delete(`/skills/${skill.id}`);
-      alert("Skill deleted successfully ");
-      window.location.reload(); 
+      alert("Skill deleted successfully");
+      window.location.reload();
     } catch (err) {
       console.error("Error deleting skill:", err);
-      alert("Failed to delete skill ");
+      alert("Failed to delete skill");
+    }
+  };
+
+
+  const handleRequest = async () => {
+    const requesterId = localStorage.getItem("userId");
+
+    if (!requesterId) {
+      alert("You need to log in before requesting a skill!");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const requestBody = {
+        skillId: skill.id,
+        requesterId: parseInt(requesterId),
+        status: "pending",
+        createdAt: new Date().toISOString(),
+      };
+
+      await api.post("/requests", {
+        skillId: skill.id,
+        requesterId: parseInt(localStorage.getItem("userId")),
+      });
+
+      alert(`Request sent successfully to ${skill.title}!`);
+    } catch (err) {
+      console.error("Error requesting skill:", err);
+      alert("Failed to send request");
     }
   };
 
@@ -25,8 +55,8 @@ export default function SkillCard({ skill }) {
       </p>
       <p className="text-xs text-gray-400 mt-1">Status: {skill.status}</p>
 
-      <div className="mt-4 flex gap-2">
-        
+      <div className="mt-4 flex flex-wrap gap-2">
+
         <button
           onClick={() => navigate(`/edit-skill/${skill.id}`)}
           className="bg-yellow-400 text-white px-3 py-1 rounded hover:bg-yellow-500 transition"
@@ -34,12 +64,20 @@ export default function SkillCard({ skill }) {
           Edit
         </button>
 
-       
+
         <button
           onClick={handleDelete}
           className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
         >
           Delete
+        </button>
+
+
+        <button
+          onClick={handleRequest}
+          className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition"
+        >
+          Request Skill
         </button>
       </div>
     </div>
